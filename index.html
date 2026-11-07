@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#080d17"/>
+<title>GeoMind · 格致几何 — AI 竞赛几何工作台</title>
+<meta name="description" content="面向数学竞赛的 AI 平面几何工作台：动态作图、三角形特征点识别、关系发掘、自动命题、综合法与计算法解题。"/>
+<link rel="preload" href="fonts/FandolHei-subset.woff2?v=25" as="font" type="font/woff2" crossorigin/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23080d17'/%3E%3Cpath d='M7 31 20 6l13 25Z' fill='none' stroke='%23ff7a59' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%23ff7a59'/%3E%3C/svg%3E"/>
+<link rel="stylesheet" href="css/app.css?v=27"/>
+</head>
+<body data-theme="ink">
+<div id="app" class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><path d="M7 31 20 6l13 25Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="20" cy="6" r="2.6" fill="currentColor"/><circle cx="7" cy="31" r="2.6" fill="currentColor"/><circle cx="33" cy="31" r="2.6" fill="currentColor"/><path d="M20 6v25M7 31h26" stroke="currentColor" stroke-width=".8" opacity=".45"/><circle cx="20" cy="20" r="2.2" fill="var(--accent)"/></svg>
+      </div>
+      <div class="brand-text"><strong>GeoMind</strong><span>格致几何 · AI 工作台</span></div>
+      <span class="version-chip">v1.0</span>
+    </div>
+    <div class="doc-cluster">
+      <span class="live-dot"></span>
+      <input id="doc-name" class="doc-name" value="欧拉线与九点圆" maxlength="40" aria-label="画板名称"/>
+      <span id="save-state" class="save-state">已保存到本地</span>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="btn-undo" title="撤销 Ctrl+Z" aria-label="撤销"><svg viewBox="0 0 24 24"><path d="M9 7 4 12l5 5M4 12h10a5 5 0 0 1 0 10"/></svg></button>
+      <button class="icon-btn" id="btn-redo" title="重做 Ctrl+Shift+Z" aria-label="重做"><svg viewBox="0 0 24 24"><path d="m15 7 5 5-5 5m5-5H10a5 5 0 0 0 0 10"/></svg></button>
+      <span class="v-divider"></span>
+      <button class="soft-btn" id="btn-new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>新建</span></button>
+      <button class="soft-btn" id="btn-vision"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.8"/><path d="m3 17 5-5 4 4 3-2 6 5"/></svg><span>识图</span></button>
+      <button class="soft-btn" id="btn-import"><svg viewBox="0 0 24 24"><path d="M12 19V6m-5 5 5-5 5 5M4 21h16"/></svg><span>导入</span></button>
+      <button class="soft-btn" id="btn-export"><svg viewBox="0 0 24 24"><path d="M12 4v13m-5-5 5 5 5-5M4 21h16"/></svg><span>导出</span></button>
+      <button class="soft-btn" id="btn-logs" title="运行日志"><span>日志</span></button>
+      <button class="soft-btn" id="btn-settings" title="设置" aria-label="设置"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z"/></svg></button>
+      <button class="ai-btn" id="btn-ai"><span class="spark">✦</span><span>AI 解题</span><kbd>⌘↵</kbd></button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <nav class="rail" id="rail" aria-label="工具类别"></nav>
+    <aside class="tools-panel" id="tools-panel">
+      <div class="panel-head">
+        <span class="eyebrow">TOOLBOX</span>
+        <h2 id="tool-group-title">选择</h2>
+        <p id="tool-group-sub">选择、移动与检查对象</p>
+        <button class="mobile-tools-close" id="mobile-tools-close" aria-label="关闭工具">×</button>
+      </div>
+      <div id="tool-list" class="tool-list"></div>
+      <div id="tool-config" class="tool-config"></div>
+      <div class="tools-foot">
+        <div class="kbd-row"><kbd>Space</kbd><span>平移画布</span><kbd>Esc</kbd><span>取消</span></div>
+        <button class="ghost-link" id="btn-command"><span>⌘K</span> 命令面板 / 搜索</button>
+      </div>
+    </aside>
+
+    <main class="stage" id="stage">
+      <div class="stage-head">
+        <div class="mode-chip"><span class="mode-pulse"></span><b id="active-tool-label">选择 / 移动</b></div>
+        <div class="stage-hint" id="stage-hint">拖动自由点，或点击对象查看属性</div>
+        <button class="multi-chip" id="btn-multiselect" title="多选模式：点击对象累加选择；Shift 点击移除" aria-pressed="false">多选</button>
+        <div class="stage-meta"><span id="obj-count">0 对象</span><i>·</i><span id="zoom-label">100%</span></div>
+      </div>
+      <canvas id="board" aria-label="交互式几何画板"></canvas>
+      <div class="stage-tools">
+        <button class="round-btn" id="btn-fit" title="适应视图 F"><svg viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5m0 11h-5m-6 0H4v-5"/></svg></button>
+        <button class="round-btn" id="btn-zoom-in" title="放大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="round-btn" id="btn-zoom-out" title="缩小"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      </div>
+      <div class="stage-bottom">
+        <span class="coord-readout" id="coords">x 0.00&nbsp;&nbsp;y 0.00</span>
+        <span class="stage-tip" id="stage-tip">空格 + 拖动平移 · 滚轮缩放 · 双击重命名</span>
+      </div>
+    </main>
+
+    <aside class="inspector" id="inspector">
+      <div class="inspector-head">
+        <div class="inspector-title"><span class="eyebrow">INSPECTOR</span><h2 id="inspector-title">几何工作台</h2></div>
+        <button class="icon-btn small" id="btn-collapse-inspector" title="收起面板"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+      </div>
+      <div class="inspector-tabs" id="inspector-tabs">
+        <button data-tab="objects" class="active"><span>◈</span>代数</button>
+        <button data-tab="triangle"><span>△</span>三角形<i id="tri-badge" class="tab-badge">1</i></button>
+        <button data-tab="complex"><span>ℂ</span>复数</button>
+        <button data-tab="ai"><span>⊢</span>AI 解题</button>
+        <button data-tab="explore"><span>✳</span>探索</button>
+        <button data-tab="library"><span>▤</span>题库</button>
+      </div>
+      <div class="inspector-body" id="inspector-body"></div>
+      <div class="inspector-foot">
+        <span class="status-dot" id="backend-dot"></span><span id="backend-label">本地内核</span>
+        <span class="foot-spacer"></span><span id="revision">REV 0</span><span id="stats-label">—</span>
+      </div>
+    </aside>
+  </div>
+  <aside class="mobile-objects" id="mobile-objects" aria-label="几何对象列表">
+    <div class="mobile-objects-head"><strong>代数</strong><span id="mobile-obj-count">0</span><button id="mobile-objects-close" aria-label="关闭">×</button></div>
+    <div class="mobile-algebra"><input id="mobile-algebra-input" placeholder="A=(1,2) / Midpoint(A,B)" autocomplete="off"/><button id="mobile-algebra-run">执行</button><button id="mobile-algebra-script">脚本</button><button id="mobile-lock-free">固定</button><button id="mobile-clear-traces">清轨迹</button></div>
+    <div class="mobile-objects-body" id="mobile-objects-body"></div>
+  </aside>
+  <div class="mobile-toolbar" id="mobile-toolbar">
+    <button class="mtb-close" id="mobile-toolbar-close" aria-label="隐藏工具栏">×</button>
+    <button data-mtool="select"><b>↖</b><span>选择</span></button>
+    <button data-mtool="freePoint"><b>·</b><span>点</span></button>
+    <button data-mtool="segment"><b>/</b><span>线段</span></button>
+    <button data-mtool="circleCenter"><b>○</b><span>圆</span></button>
+    <button data-mtool="objects"><b>≡</b><span>对象</span></button>
+    <button data-mtool="inspector"><b>☰</b><span>面板</span></button>
+    <button data-mtool="library"><b>▤</b><span>题库</span></button>
+    <button data-mtool="zoomin"><b>＋</b><span>放大</span></button>
+    <button data-mtool="zoomout"><b>−</b><span>缩小</span></button>
+    <button data-mtool="undo"><b>↶</b><span>撤销</span></button>
+    <button data-mtool="delete"><b>⌫</b><span>删除</span></button>
+    <button data-mtool="fit"><b>⛶</b><span>适应</span></button>
+    <button data-mtool="logs"><b>▤</b><span>日志</span></button>
+  </div>
+  <button class="mobile-toolbar-open" id="mobile-toolbar-open" aria-label="打开工具栏">工具</button>
+</div>
+<div id="toasts" class="toasts"></div>
+<div id="modal-root"></div>
+<div id="cmdk" class="cmdk" hidden>
+  <div class="cmdk-panel">
+    <div class="cmdk-head"><span>⌘</span><input id="cmdk-input" placeholder="搜索工具、操作、题目…" autocomplete="off"/><kbd>ESC</kbd></div>
+    <div id="cmdk-list" class="cmdk-list"></div>
+    <div class="cmdk-foot"><span>↑↓ 选择</span><span>↵ 执行</span><span>Shift+↵ 连续执行</span></div>
+  </div>
+</div>
+<input type="file" id="file-input" accept=".json,.geomind.json,application/json" hidden/>
+<script type="module" src="js/app.js?v=95"></script>
+</body>
+</html>

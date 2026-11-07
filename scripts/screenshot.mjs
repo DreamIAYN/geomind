@@ -1,0 +1,12 @@
+import { ROOT } from './browser-env.mjs';
+import path from 'node:path';
+const { chromium } = await import('playwright');
+const url = process.argv[2] || 'http://127.0.0.1:4173/';
+const out = path.resolve(process.argv[3] || path.join(ROOT, 'screenshots', 'current.png'));
+const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-crash-reporter', '--disable-breakpad'] });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: out });
+console.log('screenshot:', out);
+await browser.close();
